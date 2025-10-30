@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { Cat, Flower, Sun, Moon } from "lucide-vue-next";
+import {ref, onMounted} from "vue";
+import {Cat, Flower, Sun, Moon, ChevronLeft, ChevronRight, Circle, CircleStar, Pause, Play} from "lucide-vue-next";
 
 const isDark = ref(false);
 
@@ -26,6 +26,14 @@ function caramel() {
   console.log("Flower time 🌸");
 }
 
+function pastDay() {
+  console.log("⬅️ previous day");
+}
+
+function nextDay() {
+  console.log("➡️ next day");
+}
+
 onMounted(() => applyTheme());
 </script>
 
@@ -34,54 +42,125 @@ onMounted(() => applyTheme());
     <div
         class="relative w-[390px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
     >
-      <div class="h-full p-8 relative">
+      <div class="h-full p-6 flex flex-col justify-start gap-6">
 
-        <button
-            @click="toggleTheme"
-            class="absolute top-3 right-3 p-3 rounded-xl  hover:scale-110 active:scale-95 transition cursor-pointer"
-            aria-label="Toggle theme"
-        >
-          <Sun v-if="!isDark" class="w-7 h-7 text-yellow-500" />
-          <Moon v-else class="w-7 h-7 text-gray-100" />
-        </button>
-
-        <button
-            @click="cat"
-            class="absolute top-4 left-4 p-2 rounded-xl  hover:scale-110 active:scale-95 transition cursor-pointer"
-            aria-label="cat time"
-        >
-          <Cat class="w-6 h-6 text-gray-700 dark:text-gray-100" />
-        </button>
-
-        <button
-            @click="caramel"
-            class="absolute top-4 left-15 p-2 rounded-xl  hover:scale-110 active:scale-95 transition cursor-pointer"
-            aria-label="caramel time"
-        >
-          <Flower class="w-6 h-6 text-pink-500 dark:text-pink-300" />
-        </button>
-
-        <div>
-          <div>
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-2">
             <button
-                @click="pastDay"
-                class="absolute top-4 left-15 p-2 rounded-xl  hover:scale-110 active:scale-95 transition cursor-pointer"
+                @click="cat"
+                class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
+                aria-label="cat time"
+            >
+              <Cat class="w-6 h-6 text-gray-700 dark:text-gray-100"/>
+            </button>
+
+            <button
+                @click="caramel"
+                class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
                 aria-label="caramel time"
             >
-              <Flower class="w-6 h-6 text-pink-500 dark:text-pink-300" />
+              <Flower class="w-6 h-6 text-pink-500 dark:text-pink-300"/>
             </button>
           </div>
-          <h1 class="mt-12 text-1xl font-bold">Hello world</h1>
-          <div>
-            <button
-                @click="pastDay"
-                class="absolute top-4 left-15 p-2 rounded-xl  hover:scale-110 active:scale-95 transition cursor-pointer"
-                aria-label="caramel time"
-            >
-              <Flower class="w-6 h-6 text-pink-500 dark:text-pink-300" />
-            </button>
+
+          <button
+              @click="toggleTheme"
+              class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
+              aria-label="Toggle theme"
+          >
+            <Sun v-if="!isDark" class="w-7 h-7 text-yellow-500"/>
+            <Moon v-else class="w-7 h-7 text-gray-100"/>
+          </button>
+        </div>
+
+
+        <div class="flex justify-between items-center mt-6">
+          <button
+              @click="pastDay"
+              class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
+              aria-label="previous day"
+          >
+            <ChevronLeft class="w-6 h-6 text-gray-700 dark:text-gray-200"/>
+          </button>
+
+          <span class="font-serif text-lg font-bold">Wed 29 Oct</span>
+
+          <button
+              @click="nextDay"
+              class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
+              aria-label="next day"
+          >
+            <ChevronRight class="w-6 h-6 text-gray-700 dark:text-gray-200"/>
+          </button>
+        </div>
+
+
+        <div class="flex items-center justify-center">
+          <span class="font-serif text-7xl text-gray-700 dark:text-gray-100">25:00</span>
+        </div>
+
+        <div class="flex items-center justify-center gap-0.5">
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+          <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+        </div>
+
+        <div class="flex items-center justify-center gap-4">
+          <Play class="w-8 h-8 text-gray-700 dark:text-gray-200"/>
+          <Pause class="w-7 h-7 text-gray-700 dark:text-gray-200"/>
+        </div>
+
+        <div class="flex justify-between items-center mt-5">
+          <Cat class="w-6 h-6 text-gray-700 dark:text-gray-100"/>
+          <input
+              type="text"
+              placeholder="So what are we going to do now?"
+              class="border-0 border-b font-serif  text-gray-700 dark:text-gray-100 focus:outline-none w-72 pb-1"
+          />
+        </div>
+
+        <div class="flex justify-center mt-10">
+          <div class="w-72 h-50 overflow-y-auto border border-gray-300/70 rounded-md p-3">
+            <ul class="space-y-4 font-serif text-gray-800 dark:text-gray-100">
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>First item with an icon</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>Second item with an icon</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>Third item with an icon</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>First item with an icon</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>Second item with an icon</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+                <span>Third item with an icon</span>
+              </li>
+            </ul>
           </div>
         </div>
+
+
       </div>
     </div>
   </div>
