@@ -1,2 +1,10 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+.font-space {
+    font-family: "Space Mono", monospace;
+}
+.font-thin-italic {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 100;
+    font-style: italic;
+}
