@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from "vue";
+import {ref, onMounted, onUnmounted, } from "vue";
 import {
   Cat,
   Flower,
@@ -19,7 +19,11 @@ const startMinutes = 25;
 const timeLeft = ref(startMinutes * 60);
 const isRunning = ref(false);
 let interval = null;
+const TOTAL_MARKERS = 13;
+const completed = ref(7);
 
+const savedCompleted = Number(localStorage.getItem("completed") || 0);
+completed.value = Math.min(isNaN(savedCompleted) ? 0 : savedCompleted, TOTAL_MARKERS);
 
 function applyTheme() {
   isDark.value =
@@ -61,8 +65,14 @@ function start() {
   if (isRunning.value) return;
   isRunning.value = true;
   interval = setInterval(() => {
-    if (timeLeft.value > 0) timeLeft.value--;
-    else pause();
+    if (timeLeft.value > 0) {
+      timeLeft.value--;
+    } else {
+      completed.value = Math.min(completed.value + 1, TOTAL_MARKERS);
+      localStorage.setItem("completed", String(completed.value));
+      pause();
+      timeLeft.value = startMinutes * 60;
+    }
   }, 1000);
 }
 
@@ -146,21 +156,17 @@ onMounted(() => applyTheme());
       </span>
           </div>
 
-
           <div class="flex items-center justify-center gap-0.5">
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <CircleStar class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
-            <Circle class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+            <template v-for="i in TOTAL_MARKERS" :key="i">
+              <CircleStar
+                  v-if="i <= completed"
+                  class="w-4 h-4 text-gray-700 dark:text-gray-200"
+              />
+              <Circle
+                  v-else
+                  class="w-4 h-4 text-gray-700 dark:text-gray-200"
+              />
+            </template>
           </div>
 
           <div class="flex items-center justify-center gap-4">
@@ -172,7 +178,7 @@ onMounted(() => applyTheme());
               />
               <Pause
                   v-else
-                  class="w-7 h-7 text-gray-700 dark:text-gray-200 cursor-pointer"
+                  class="w-8 h-8 text-gray-700 dark:text-gray-200 cursor-pointer"
                   @click="pause"
               />
               <RotateCcw
@@ -182,16 +188,16 @@ onMounted(() => applyTheme());
             </div>
           </div>
 
-          <div class="flex justify-between items-center mt-5">
+          <div class="flex justify-between items-center mt-10 gap-4">
             <Cat class="w-6 h-6 text-gray-700 dark:text-gray-100"/>
             <input
                 type="text"
                 placeholder="So what are we going to do now?"
-                class="border-0 border-b font-serif  text-gray-700 dark:text-gray-100 focus:outline-none w-72 pb-1"
+                class="border-0 border-b font-serif  text-gray-700 dark:text-gray-100 focus:outline-none w-64 pb-1"
             />
           </div>
 
-          <div class="flex justify-center mt-10">
+          <div class="flex justify-center mt-2">
             <div class="w-72 h-50 overflow-y-auto border border-gray-300/70 rounded-md p-3">
               <ul class="space-y-4 font-serif text-gray-800 dark:text-gray-100">
                 <li class="flex items-center gap-2">
