@@ -94,7 +94,7 @@ onMounted(() => applyTheme());
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div
-        class="relative w-[420px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
+        class="relative w-[430px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
     >
       <div class="h-full p-6 flex flex-col justify-start gap-6">
 
@@ -151,7 +151,7 @@ onMounted(() => applyTheme());
 
         <div class="flex flex-col items-center justify-center gap-6">
           <div class="flex items-center justify-center">
-      <span class="font-thin-italic text-7xl text-gray-700 dark:text-gray-100">
+      <span class="font-thin-italic text-8xl text-gray-700 dark:text-gray-100">
         {{ formatTime() }}
       </span>
           </div>
@@ -160,7 +160,7 @@ onMounted(() => applyTheme());
             <template v-for="i in TOTAL_MARKERS" :key="i">
               <CircleStar
                   v-if="i <= completed"
-                  class="w-4 h-4 text-gray-700 dark:text-gray-200"
+                  class="w-6 h-6 text-gray-700 dark:text-gray-200"
               />
               <Circle
                   v-else
@@ -173,12 +173,12 @@ onMounted(() => applyTheme());
             <div class="flex items-center justify-center gap-4">
               <Play
                   v-if="!isRunning"
-                  class="w-8 h-8 text-gray-700 dark:text-gray-200 cursor-pointer"
+                  class="w-10 h-10 text-gray-700 dark:text-gray-200 cursor-pointer"
                   @click="start"
               />
               <Pause
                   v-else
-                  class="w-8 h-8 text-gray-700 dark:text-gray-200 cursor-pointer"
+                  class="w-10 h-8 text-gray-700 dark:text-gray-200 cursor-pointer"
                   @click="pause"
               />
               <RotateCcw
@@ -198,7 +198,7 @@ onMounted(() => applyTheme());
           </div>
 
           <div class="flex justify-center mt-2">
-            <div class="w-72 h-50 overflow-y-auto border border-gray-300/70 rounded-md p-3">
+            <div class="w-72 h-50 overflow-y-auto ">
               <ul class="space-y-4 font-serif text-gray-800 dark:text-gray-100">
                 <li class="flex items-center gap-2">
                   <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
