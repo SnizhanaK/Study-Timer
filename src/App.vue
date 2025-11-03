@@ -84,7 +84,7 @@ onMounted(() => applyTheme());
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div
-        class="relative w-[390px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
+        class="relative w-[420px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
     >
       <div class="h-full p-6 flex flex-col justify-start gap-6">
 
