@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, onUnmounted, } from "vue";
+import {ref, onMounted, onUnmounted,} from "vue";
 import {
   Cat,
   Flower,
@@ -11,11 +11,12 @@ import {
   CircleStar,
   Pause,
   Play,
-  RotateCcw
+  RotateCcw,
+  SkipForward,
 } from "lucide-vue-next";
 
 const isDark = ref(false);
-const startMinutes = 25;
+const startMinutes = 0.05;
 const timeLeft = ref(startMinutes * 60);
 const isRunning = ref(false);
 let interval = null;
@@ -84,6 +85,20 @@ function pause() {
 function reset() {
   pause();
   timeLeft.value = startMinutes * 60;
+
+  if (completed.value >= TOTAL_MARKERS) {
+    completed.value = 0;
+    localStorage.setItem("completed", "0");
+  }
+}
+
+function skipForward() {
+  // Imitate a finished Pomodoro session
+  completed.value = Math.min(completed.value + 1, TOTAL_MARKERS);
+  localStorage.setItem("completed", String(completed.value));
+
+  pause();
+  timeLeft.value = startMinutes * 60;
 }
 
 onUnmounted(() => clearInterval(interval));
@@ -92,9 +107,9 @@ onMounted(() => applyTheme());
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="flex items-center justify-center min-h-screen bg-black">
     <div
-        class="relative w-[430px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white rounded-[2rem] shadow-2xl border border-gray-300 overflow-hidden transition-colors"
+        class="relative w-[440px] h-[780px] bg-white dark:bg-gray-900 text-black dark:text-white  shadow-2xl  overflow-hidden transition-colors"
     >
       <div class="h-full p-6 flex flex-col justify-start gap-6">
 
@@ -169,24 +184,28 @@ onMounted(() => applyTheme());
             </template>
           </div>
 
-          <div class="flex items-center justify-center gap-4">
-            <div class="flex items-center justify-center gap-4">
-              <Play
-                  v-if="!isRunning"
-                  class="w-10 h-10 text-gray-700 dark:text-gray-200 cursor-pointer"
-                  @click="start"
-              />
-              <Pause
-                  v-else
-                  class="w-10 h-8 text-gray-700 dark:text-gray-200 cursor-pointer"
-                  @click="pause"
-              />
-              <RotateCcw
-                  class="w-7 h-7 text-gray-700 dark:text-gray-200 cursor-pointer"
-                  @click="reset"
-              />
-            </div>
+
+          <div class="flex items-center justify-center gap-8">
+            <Play
+                v-if="!isRunning"
+                class="w-12 h-12 text-gray-700 dark:text-gray-200 cursor-pointer"
+                @click="start"
+            />
+            <Pause
+                v-else
+                class="w-12 h-12 text-gray-700 dark:text-gray-200 cursor-pointer"
+                @click="pause"
+            />
+            <SkipForward
+                class="w-10 h-10 text-gray-700 dark:text-gray-200 cursor-pointer"
+                @click="skipForward"
+            />
+            <RotateCcw
+                class="w-10 h-10 text-gray-700 dark:text-gray-200 cursor-pointer"
+                @click="reset"
+            />
           </div>
+
 
           <div class="flex justify-between items-center mt-10 gap-4">
             <Cat class="w-6 h-6 text-gray-700 dark:text-gray-100"/>
@@ -198,7 +217,7 @@ onMounted(() => applyTheme());
           </div>
 
           <div class="flex justify-center mt-2">
-            <div class="w-72 h-50 overflow-y-auto ">
+            <div class="w-72 h-50 overflow-y-auto border border-gray-300/70 rounded-md p-3">
               <ul class="space-y-4 font-serif text-gray-800 dark:text-gray-100">
                 <li class="flex items-center gap-2">
                   <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
