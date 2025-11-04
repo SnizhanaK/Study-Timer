@@ -13,18 +13,24 @@ import {
   Play,
   RotateCcw,
   SkipForward,
+  Edit3,
+  Trash2
 } from "lucide-vue-next";
 
 const isDark = ref(false);
-const startMinutes = 0.05;
+const startMinutes = 0.10;
 const timeLeft = ref(startMinutes * 60);
 const isRunning = ref(false);
 let interval = null;
 const TOTAL_MARKERS = 13;
 const completed = ref(7);
+const editingIndex = ref(null);
+const editingText = ref("");
 
 const savedCompleted = Number(localStorage.getItem("completed") || 0);
 completed.value = Math.min(isNaN(savedCompleted) ? 0 : savedCompleted, TOTAL_MARKERS);
+const taskInput = ref("");
+const tasks = ref(JSON.parse(localStorage.getItem("tasks") || "[]"));
 
 function applyTheme() {
   isDark.value =
@@ -71,6 +77,7 @@ function start() {
     } else {
       completed.value = Math.min(completed.value + 1, TOTAL_MARKERS);
       localStorage.setItem("completed", String(completed.value));
+      addCurrentInputToList();
       pause();
       timeLeft.value = startMinutes * 60;
     }
@@ -90,15 +97,54 @@ function reset() {
     completed.value = 0;
     localStorage.setItem("completed", "0");
   }
+  tasks.value = [];
+  localStorage.setItem("tasks", "[]");
+  if (typeof editingIndex !== "undefined") {
+    editingIndex.value = null;
+    editingText.value = "";
+  }
 }
 
 function skipForward() {
   // Imitate a finished Pomodoro session
   completed.value = Math.min(completed.value + 1, TOTAL_MARKERS);
   localStorage.setItem("completed", String(completed.value));
+  addCurrentInputToList();
 
   pause();
   timeLeft.value = startMinutes * 60;
+}
+
+function addCurrentInputToList() {
+  const v = taskInput.value.trim();
+  if (!v) return;
+  tasks.value.unshift(v);
+  taskInput.value = "";
+  localStorage.setItem("tasks", JSON.stringify(tasks.value));
+}
+
+function removeTask(index) {
+  tasks.value.splice(index, 1);
+  localStorage.setItem("tasks", JSON.stringify(tasks.value));
+
+  if (completed.value > 0) {
+    completed.value--;
+    localStorage.setItem("completed", String(completed.value));
+  }
+}
+
+function startEditing(index) {
+  editingIndex.value = index;
+  editingText.value = tasks.value[index];
+}
+
+function saveEditing(index) {
+  const text = editingText.value.trim();
+  if (!text) return;
+  tasks.value[index] = text;
+  localStorage.setItem("tasks", JSON.stringify(tasks.value));
+  editingIndex.value = null;
+  editingText.value = "";
 }
 
 onUnmounted(() => clearInterval(interval));
@@ -213,35 +259,56 @@ onMounted(() => applyTheme());
                 type="text"
                 placeholder="So what are we going to do now?"
                 class="border-0 border-b font-serif  text-gray-700 dark:text-gray-100 focus:outline-none w-64 pb-1"
+                v-model="taskInput"
             />
           </div>
 
           <div class="flex justify-center mt-2">
-            <div class="w-72 h-50 overflow-y-auto border border-gray-300/70 rounded-md p-3">
+            <div class="w-80 h-55 overflow-y-auto">
               <ul class="space-y-4 font-serif text-gray-800 dark:text-gray-100">
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>First item with an icon</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>Second item with an icon</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>Third item with an icon</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>First item with an icon</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>Second item with an icon</span>
-                </li>
-                <li class="flex items-center gap-2">
-                  <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
-                  <span>Third item with an icon</span>
+                <li
+                    v-for="(item, idx) in tasks"
+                    :key="idx"
+                    class="flex items-center justify-between gap-2"
+                >
+                  <div class="flex items-center gap-2 w-full min-w-0">
+                    <CircleStar class="w-5 h-5 text-gray-700 dark:text-gray-100"/>
+
+                    <template v-if="editingIndex === idx">
+                      <input
+                          v-model="editingText"
+                          @keyup.enter="saveEditing(idx)"
+                          @blur="saveEditing(idx)"
+                          class="bg-transparent border-b border-gray-400 dark:border-gray-600 focus:outline-none flex-1 min-w-0"
+                          autofocus
+                      />
+                    </template>
+
+                    <template v-else>
+
+                      <span class="flex-1 min-w-0 break-all whitespace-pre-wrap">
+          {{ item }}
+        </span>
+                    </template>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button
+                        v-if="editingIndex !== idx"
+                        @click="startEditing(idx)"
+                        class="p-1 rounded-lg hover:scale-110 active:scale-95 transition"
+                        title="Edit task"
+                    >
+                      <Edit3 class="w-5 h-5 text-blue-500 dark:text-blue-600"/>
+                    </button>
+                    <button
+                        @click="removeTask(idx)"
+                        class="p-1 rounded-lg hover:scale-110 active:scale-95 transition"
+                        title="Delete task"
+                    >
+                      <Trash2 class="w-5 h-5 text-red-500 dark:text-red-800"/>
+                    </button>
+                  </div>
                 </li>
               </ul>
             </div>
