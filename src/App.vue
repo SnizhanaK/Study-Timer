@@ -211,7 +211,7 @@ onMounted(() => applyTheme());
                 class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
                 :class="accountId==='cat' ? 'ring-2 ring-orange-500/60' : ''"
             >
-              <Cat class="w-6 h-6 text-gray-700 dark:text-orange-600"/>
+              <Cat class="w-6 h-6 text-gray-700 dark:text-gray-200 cursor-pointer"/>
             </button>
 
             <button
@@ -219,7 +219,7 @@ onMounted(() => applyTheme());
                 class="p-2 rounded-xl hover:scale-110 active:scale-95 transition cursor-pointer"
                 :class="accountId==='caramel' ? 'ring-2 ring-pink-500/60' : ''"
             >
-              <Flower class="w-6 h-6  text-pink-500 dark:text-pink-300"/>
+              <Flower class="w-6 h-6  text-gray-700 dark:text-gray-200 cursor-pointer"/>
             </button>
 
             <button
@@ -259,7 +259,7 @@ onMounted(() => applyTheme());
           <div class="flex items-center justify-center gap-0.5">
             <template v-for="i in TOTAL_MARKERS" :key="i">
               <CircleStar v-if="i <= completed" class="w-6 h-6 text-gray-700 dark:text-gray-200"/>
-              <Circle v-else class="w-4 h-4 text-gray-700 dark:text-gray-200"/>
+              <Circle v-else class="w-6 h-6 text-gray-700 dark:text-gray-200"/>
             </template>
           </div>
 
