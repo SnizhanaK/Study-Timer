@@ -147,13 +147,22 @@ function resetOnlyTimer() {
 function reset() {
   pause();
   const st = getDayState();
-  st.completed = 0;
-  st.tasks = [];
+
+  if (st.completed >= TOTAL_MARKERS) {
+    // full reset only if all markers filled
+    st.completed = 0;
+    st.tasks = []; // clear tasks only in this case
+  }
+
+  // always reset timer
   st.timeLeft = Math.round(startMinutes * 60);
   timeLeft.value = st.timeLeft;
-  persistState();
+
+  // clear editing state
   editingIndex.value = null;
   editingText.value = "";
+
+  persistState();
 }
 
 function applyCompletionForCurrentSelection() {
