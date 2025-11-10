@@ -22,7 +22,7 @@ function toggleTheme() {
 }
 
 
-const startMinutes = 0.10;
+const startMinutes = 25;
 const timeLeft = ref(Math.round(startMinutes * 60));
 const isRunning = ref(false);
 let interval = null;
