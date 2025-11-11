@@ -7,255 +7,208 @@ import {
 
 /* ---------- theme ---------- */
 const isDark = ref(false);
-
 function applyTheme() {
   isDark.value =
       localStorage.theme === "dark" ||
       (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", isDark.value);
 }
-
 function toggleTheme() {
   isDark.value = !isDark.value;
   document.documentElement.classList.toggle("dark", isDark.value);
   localStorage.theme = isDark.value ? "dark" : "light";
 }
 
-/* ---------- timer ---------- */
+/* ---------- timer (per-account engine) ---------- */
 const startMinutes = 25;
-const timeLeft = ref(startMinutes * 60);
-const isRunning = ref(false);
-let interval = null;
+const timeLeft = ref(startMinutes * 60);    // отображаем время активного аккаунта
+const isRunning = ref(false);               // состояние активного аккаунта
 const TOTAL_MARKERS = 13;
 
 const manualTime = ref("");
 const isEditingTime = ref(false);
 
+/* Аккаунт */
 const accountId = ref(localStorage.getItem("accountId") || "cat");
 const accountIconMap = {cat: Cat, caramel: Flower, both: Heart};
 const currentAccountIcon = computed(() => accountIconMap[accountId.value] || Cat);
-
-function switchAccount(id) {
-  accountId.value = id;
-  localStorage.setItem("accountId", id);
-}
-
+function switchAccount(id) { accountId.value = id; localStorage.setItem("accountId", id); }
 const cat = () => switchAccount("cat");
 const caramel = () => switchAccount("caramel");
 const both = () => switchAccount("both");
 
-function stripTime(d) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-function dateKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function addDaysJs(d, n) {
-  const nd = new Date(d);
-  nd.setDate(nd.getDate() + n);
-  return stripTime(nd);
-}
-
+/* Даты */
+function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function dateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function addDaysJs(d, n){ const nd = new Date(d); nd.setDate(nd.getDate()+n); return stripTime(nd); }
 const today = new Date();
 const currentDate = ref(stripTime(new Date()));
-const headerLabel = computed(() => new Intl.DateTimeFormat("en-US", {
-  weekday: "short",
-  day: "2-digit",
-  month: "short"
-}).format(currentDate.value));
+const headerLabel = computed(() => new Intl.DateTimeFormat("en-US",{weekday:"short",day:"2-digit",month:"short"}).format(currentDate.value));
 const isTodayActive = computed(() => dateKey(currentDate.value) === dateKey(new Date()));
 
+/* Состояние (per account + day) */
 const stateByAccountDate = ref(JSON.parse(localStorage.getItem("stateByAccountDate") || '{"cat":{},"caramel":{},"both":{}}'));
-
-function persistState() {
-  localStorage.setItem("stateByAccountDate", JSON.stringify(stateByAccountDate.value));
-}
-
+function persistState() { localStorage.setItem("stateByAccountDate", JSON.stringify(stateByAccountDate.value)); }
 function ensureDayState(id, d) {
   const k = dateKey(d);
   stateByAccountDate.value[id] ||= {};
-  stateByAccountDate.value[id][k] ||= {completed: 0, tasks: [], timeLeft: startMinutes * 60};
+  stateByAccountDate.value[id][k] ||= {
+    completed: 0,
+    tasks: [],
+    timeLeft: startMinutes * 60,
+    running: false,          // 👈 НОВОЕ: флаг запущенности таймера этого аккаунта
+    lastTs: null,            // 👈 НОВОЕ: последний тик (ms)
+  };
   return stateByAccountDate.value[id][k];
 }
+function getDayState(id = accountId.value, d = currentDate.value) { return ensureDayState(id, d); }
 
-function getDayState(id = accountId.value, d = currentDate.value) {
-  return ensureDayState(id, d);
-}
-
+/* Completed markers */
 const completed = computed({
   get: () => Math.min(getDayState().completed, TOTAL_MARKERS),
-  set: v => {
-    getDayState().completed = Math.max(0, Math.min(v, TOTAL_MARKERS));
-    persistState();
-  }
+  set: v => { getDayState().completed = Math.max(0, Math.min(v, TOTAL_MARKERS)); persistState(); }
 });
 
+/* Tasks */
 const taskInput = ref("");
 const tasks = computed(() => getDayState().tasks);
 const editingIndex = ref(null);
 const editingText = ref("");
-
-function saveTasksAll() {
-  persistState();
+function saveTasksAll(){ persistState(); }
+function addCurrentInputToList(){
+  const v = taskInput.value.trim(); if (!v) return;
+  const id = accountId.value; const push = k => getDayState(k).tasks.unshift(v);
+  if (id === "both") { push("both"); push("cat"); push("caramel"); } else push(id);
+  taskInput.value = ""; persistState();
 }
+function removeTask(i){ const st = getDayState(); st.tasks.splice(i,1); persistState(); if (completed.value>0) completed.value--; }
+function startEditing(i){ editingIndex.value=i; editingText.value=tasks.value[i]; }
+function saveEditing(i){ const t = editingText.value.trim(); if (!t) return; tasks.value[i]=t; saveTasksAll(); editingIndex.value=null; editingText.value=""; }
 
-function addCurrentInputToList() {
-  const v = taskInput.value.trim();
-  if (!v) return;
-  const id = accountId.value;
-  const push = k => getDayState(k).tasks.unshift(v);
-  if (id === "both") {
-    push("both");
-    push("cat");
-    push("caramel");
-  } else push(id);
-  taskInput.value = "";
-  persistState();
-}
-
-function removeTask(i) {
-  const st = getDayState();
-  st.tasks.splice(i, 1);
-  persistState();
-  if (completed.value > 0) completed.value--;
-}
-
-function startEditing(i) {
-  editingIndex.value = i;
-  editingText.value = tasks.value[i];
-}
-
-function saveEditing(i) {
-  const t = editingText.value.trim();
-  if (!t) return;
-  tasks.value[i] = t;
-  saveTasksAll();
-  editingIndex.value = null;
-  editingText.value = "";
-}
-
+/* Helpers */
 function formatTime() {
-  const m = String(Math.floor(timeLeft.value / 60)).padStart(2, "0");
-  const s = String(timeLeft.value % 60).padStart(2, "0");
+  const m = String(Math.floor(timeLeft.value/60)).padStart(2,"0");
+  const s = String(timeLeft.value%60).padStart(2,"0");
   return `${m}:${s}`;
+}
+function ensureDefaultTask(){ if (!taskInput.value.trim()) taskInput.value = "study"; }
+function playBeep(){
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+  const ctx = new Ctx();
+  function tone(freq,dur,delay=0){
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = "triangle"; osc.frequency.value = freq; osc.connect(gain); gain.connect(ctx.destination);
+    const t = ctx.currentTime + delay/1000;
+    gain.gain.setValueAtTime(0.001,t);
+    gain.gain.exponentialRampToValueAtTime(0.25,t+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001,t+dur/1000);
+    osc.start(t); osc.stop(t+dur/1000);
+  }
+  tone(880,180,0); tone(660,220,220);
 }
 
 /* --- inline edit time --- */
-function startInlineEditTime() {
-  manualTime.value = formatTime();
-  isEditingTime.value = true;
-}
-
-function applyManualTime() {
+function startInlineEditTime(){ manualTime.value = formatTime(); isEditingTime.value = true; }
+function applyManualTime(){
   const parts = manualTime.value.split(":").map(Number);
   let total = 0;
   if (parts.length === 1) total = parts[0] * 60;
   else if (parts.length === 2) total = parts[0] * 60 + parts[1];
   if (total > 0) {
-    timeLeft.value = total;
     const st = getDayState();
     st.timeLeft = total;
+    timeLeft.value = total;
     persistState();
   }
   isEditingTime.value = false;
 }
+function onInlineTimeKey(e){ if (e.key === "Enter") applyManualTime(); else if (e.key === "Escape") isEditingTime.value = false; }
 
-function onInlineTimeKey(e) {
-  if (e.key === "Enter") applyManualTime();
-  else if (e.key === "Escape") isEditingTime.value = false;
+/* ---------- независимый движок тиков для ВСЕХ аккаунтов ---------- */
+let engine = null;
+
+// инкремент «звёздочки» целевого аккаунта (учитывает режим both)
+function incForAccount(targetId){
+  const inc = (key) => { const stx = getDayState(key); stx.completed = Math.min((stx.completed ?? 0)+1, TOTAL_MARKERS); };
+  if (targetId === "both") { inc("both"); inc("cat"); inc("caramel"); } else { inc(targetId); }
 }
 
-/* --- helpers --- */
-function ensureDefaultTask() {
-  if (!taskInput.value.trim()) taskInput.value = "study";
+// добавить "study" в нужные списки (как твоя логика для both)
+function pushStudyTask(targetId){
+  const push = (key) => ensureDayState(key, currentDate.value).tasks.unshift("study");
+  if (targetId === "both") { push("both"); push("cat"); push("caramel"); } else { push(targetId); }
 }
 
-function playBeep() {
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) return;
-  const ctx = new Ctx();
+function tickAllAccounts(){
+  const now = Date.now();
+  for (const id of ["cat","caramel","both"]) {
+    const st = ensureDayState(id, currentDate.value);
+    if (!st.running) continue;
 
-  function tone(freq, dur, delay = 0) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.value = freq;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    const t = ctx.currentTime + delay / 1000;
-    gain.gain.setValueAtTime(0.001, t);
-    gain.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + dur / 1000);
-    osc.start(t);
-    osc.stop(t + dur / 1000);
+    if (!st.lastTs) st.lastTs = now;
+    const deltaSec = Math.floor((now - st.lastTs) / 1000);
+    if (deltaSec <= 0) continue;
+
+    st.timeLeft = Math.max(0, st.timeLeft - deltaSec);
+    st.lastTs += deltaSec * 1000;
+
+    // завершение цикла у конкретного аккаунта
+    if (st.timeLeft === 0) {
+      incForAccount(id);
+      pushStudyTask(id);
+      if (id === accountId.value) playBeep();   // звук только активному
+
+      st.running = false;
+      st.lastTs = null;
+      st.timeLeft = startMinutes * 60;
+    }
   }
 
-  tone(880, 180, 0);
-  tone(660, 220, 220);
-}
+  // обновить UI активного аккаунта
+  const cur = getDayState();
+  timeLeft.value = cur.timeLeft;
+  isRunning.value = cur.running;
 
-/* --- timer control --- */
-function start() {
-  if (isRunning.value) return;
-  isRunning.value = true;
-  interval = setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--;
-      getDayState().timeLeft = timeLeft.value;
-      persistState();
-    } else {
-      ensureDefaultTask();
-      playBeep();
-      applyCompletionForCurrentSelection();
-      addCurrentInputToList();
-      pause();
-      resetOnlyTimer();
-    }
-  }, 1000);
-}
-
-function pause() {
-  isRunning.value = false;
-  clearInterval(interval);
-}
-
-function resetOnlyTimer() {
-  timeLeft.value = startMinutes * 60;
-  getDayState().timeLeft = timeLeft.value;
   persistState();
 }
 
-function reset() {
-  pause();
+/* --- управление текущим аккаунтом --- */
+function start(){
   const st = getDayState();
-  if (st.completed >= TOTAL_MARKERS) {
-    st.completed = 0;
-    st.tasks = [];
-  }
+  if (st.running) return;
+  st.running = true;
+  st.lastTs = Date.now();
+  isRunning.value = true;
+  persistState();
+}
+function pause(){
+  const st = getDayState();
+  st.running = false;
+  st.lastTs = null;
+  isRunning.value = false;
+  persistState();
+}
+function resetOnlyTimer(){
+  const st = getDayState();
   st.timeLeft = startMinutes * 60;
   timeLeft.value = st.timeLeft;
-  editingIndex.value = null;
-  editingText.value = "";
   persistState();
 }
-
-function applyCompletionForCurrentSelection() {
+function reset(){
+  pause();
+  const st = getDayState();
+  if (st.completed >= TOTAL_MARKERS) { st.completed = 0; st.tasks = []; }
+  st.timeLeft = startMinutes * 60;
+  timeLeft.value = st.timeLeft;
+  editingIndex.value = null; editingText.value = "";
+  persistState();
+}
+function applyCompletionForCurrentSelection(){
   const id = accountId.value;
-  const inc = k => {
-    const st = getDayState(k);
-    st.completed = Math.min((st.completed ?? 0) + 1, TOTAL_MARKERS);
-  };
-  if (id === "both") {
-    inc("both");
-    inc("cat");
-    inc("caramel");
-  } else inc(id);
+  incForAccount(id);
   persistState();
 }
-
-function skipForward() {
+function skipForward(){
   ensureDefaultTask();
   applyCompletionForCurrentSelection();
   addCurrentInputToList();
@@ -263,33 +216,31 @@ function skipForward() {
   resetOnlyTimer();
 }
 
-/* --- navigation --- */
-function gotoPrevDay() {
-  navigateToDay(addDaysJs(currentDate.value, -1));
-}
-
-function gotoNextDay() {
-  navigateToDay(addDaysJs(currentDate.value, 1));
-}
-
-function navigateToDay(d) {
-  pause();
+/* --- навигация по дням (оставляю как у тебя: пауза текущего) --- */
+function gotoPrevDay(){ navigateToDay(addDaysJs(currentDate.value,-1)); }
+function gotoNextDay(){ navigateToDay(addDaysJs(currentDate.value, 1)); }
+function navigateToDay(d){
+  pause();                               // как было у тебя
   currentDate.value = stripTime(d);
   const st = getDayState();
   timeLeft.value = typeof st.timeLeft === "number" ? st.timeLeft : startMinutes * 60;
-  editingIndex.value = null;
-  editingText.value = "";
+  editingIndex.value = null; editingText.value = "";
 }
 
-/* --- account switch --- */
-watch(accountId, () => ensureDayState(accountId.value, currentDate.value));
+/* --- переключение аккаунта: НЕ останавливаем другие --- */
+watch(accountId, () => {
+  const st = getDayState();
+  timeLeft.value = typeof st.timeLeft === "number" ? st.timeLeft : startMinutes * 60;
+  isRunning.value = st.running;  // показать корректные Play/Pause
+});
 
 /* --- lifecycle --- */
 onMounted(() => {
   applyTheme();
   timeLeft.value = getDayState().timeLeft;
+  engine = setInterval(tickAllAccounts, 1000);   // единый тиковый движок
 });
-onUnmounted(() => clearInterval(interval));
+onUnmounted(() => { clearInterval(engine); });
 </script>
 
 <template>
@@ -343,15 +294,15 @@ onUnmounted(() => clearInterval(interval));
                 class="cursor-pointer select-none inline-block text-center leading-none align-baseline"
                 style="width:10ch; height:1em; line-height:1; vertical-align:baseline;"
             >
-      {{ formatTime() }}
-    </span>
+              {{ formatTime() }}
+            </span>
 
             <input
                 v-else
                 v-model="manualTime"
                 @keyup="onInlineTimeKey"
                 @blur="applyManualTime"
-                class="bg-transparent  leading-none text-center select-text inline-block align-baseline"
+                class="bg-transparent leading-none text-center select-text inline-block align-baseline"
                 style="border:none; outline:none; width:10ch; height:1em; line-height:1; padding:0; margin:0; vertical-align:baseline;"
                 autofocus
             />
@@ -419,8 +370,6 @@ onUnmounted(() => clearInterval(interval));
       </div>
     </div>
   </div>
-
 </template>
 <style scoped>
-
 </style>
