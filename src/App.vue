@@ -124,13 +124,16 @@ function start() {
       getDayState().timeLeft = timeLeft.value;
       persistState();
     } else {
-
+      ensureDefaultTask();
       applyCompletionForCurrentSelection();
       addCurrentInputToList();
       pause();
       resetOnlyTimer();
     }
   }, 1000);
+}
+function ensureDefaultTask() {
+  if (!taskInput.value.trim()) taskInput.value = "study";
 }
 
 function pause() {
@@ -182,6 +185,7 @@ function applyCompletionForCurrentSelection() {
 }
 
 function skipForward() {
+  ensureDefaultTask();
   applyCompletionForCurrentSelection();
   addCurrentInputToList();
   pause();
