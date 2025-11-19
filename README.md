@@ -1,5 +1,21 @@
-# Vue 3 + Vite
+# Focus Timer
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A simple productivity timer with multiple profiles, daily history and task tracking.  
+The project works in the browser and can also be installed as a standalone application thanks to PWA support.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Features
+
+- Separate timers and progress tracking for each profile
+- Daily history with saved sessions and tasks
+- Inline time editing and automatic session completion with sound
+- Task list with add, edit and delete
+- Day navigation with per-day data
+- Light and dark themes with saved preference
+- Can be installed and used as an app (PWA)
+
+## Tech Stack
+
+- Vue 3 (`<script setup>`)
+- lucide-vue-next
+- Tailwind-compatible layout
+- LocalStorage for persistence
