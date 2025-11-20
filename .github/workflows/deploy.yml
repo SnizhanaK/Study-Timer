@@ -2,8 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]   # запускается при пуше в main
-  workflow_dispatch:      # можно запустить вручную в Actions
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
